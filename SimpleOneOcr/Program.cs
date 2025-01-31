@@ -2,6 +2,8 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.Versioning;
+using Microsoft.Extensions.Logging;
+using ZLogger;
 
 namespace SimpleOneOcr;
 
@@ -9,15 +11,24 @@ class Program
 {
     static void Main(string[] args)
     {
-        var ocrEngine = new Ocr();
+        using var factory = LoggerFactory.Create(logging =>
+        {
+            logging.SetMinimumLevel(LogLevel.Information);
+            logging.AddZLoggerConsole();
+        });
+        var logger = factory.CreateLogger("SimpleOneOcr");
+        
+        var ocrEngine = new Ocr(logger);
         
         var lines = ConvertToText(ocrEngine, args[0]);
+        if (lines is null) return;
+        
         ocrEngine.ResultWriteLines(lines);
         SaveResultImage(args[0], lines);
     }
     
     [SupportedOSPlatform("windows")]
-    public static Line[]? ConvertToText(Ocr ocrEngine, string imageFileName)
+    static Line[]? ConvertToText(Ocr ocrEngine, string imageFileName)
     {
         // Load the image
         var img = new Bitmap(imageFileName);
