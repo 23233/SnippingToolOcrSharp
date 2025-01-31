@@ -1,0 +1,33 @@
+name: Publish SnippingToolOcrCore Package
+
+on:
+#   release:
+#     types:
+#       - published
+  workflow_dispatch:
+
+permissions:
+  packages: write
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.x'
+
+    - name: Prep packages
+      run: dotnet nuget add source --username MIRIMIRIM --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/MIRIMIRIM/index.json"
+
+    - name: Pack the NuGet package
+      run: dotnet pack SnippingToolOcrCore/SnippingToolOcrCore.csproj -c Release -o ./artifacts
+
+    - name: Publish to GitHub Packages
+      run: dotnet nuget push ./artifacts/*.nupkg --source "github" --api-key ${{ secrets.GITHUB_TOKEN }}
