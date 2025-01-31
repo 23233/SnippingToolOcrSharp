@@ -17,43 +17,45 @@ public class Ocr
     private void Initialize()
     {
         // Initialize context
-        try
+        var res = NativeMethods.CreateOcrInitOptions(out var ctx);
+        if (res != 0)
         {
-            var res = NativeMethods.CreateOcrInitOptions(out var ctx);
-            if (res != 0)
-            {
-                _logger?.ZLogError($"Failed to create OCR init options.");
-                return;
-            }
-            Context = ctx;
-
-            // Disable model delay load
-            res = NativeMethods.OcrInitOptionsSetUseModelDelayLoad(ctx, 0);
-            if (res != 0)
-            {
-                _logger?.ZLogError($"Failed to set model delay load.");
-                return;
-            }
-
-            IsAvailable = true;
+            _logger?.ZLogError($"Failed to create OCR init options.");
+            return;
         }
-        catch (DllNotFoundException)
+        Context = ctx;
+
+        // Disable model delay load
+        res = NativeMethods.OcrInitOptionsSetUseModelDelayLoad(ctx, 0);
+        if (res != 0)
         {
-            _logger?.ZLogError($"Can not find oneocr.dll, onnxruntime.dll and oneocr.onemodel");
+            _logger?.ZLogError($"Failed to set model delay load.");
+            return;
         }
+
+        IsAvailable = true;
 
     }
 
     public Ocr(ILogger? logger = null)
     {
-        Initialize();
         _logger = logger;
+        try
+        {
+            Initialize();
+        }
+        catch (DllNotFoundException)
+        {
+            _logger?.ZLogError($"Can not find oneocr.dll, onnxruntime.dll and oneocr.onemodel");
+            throw;
+        }
+        
     }
 
     // The key is for the AI model, if key is not right, CreateOcrPipeline will
     // return 6 with error message: Crypto.cpp:78 Check failed: meta->magic_number
     // == MAGIC_NUMBER (0 vs. 1) Unable to uncompress. Source data mismatch.
-    private const string Key = @"kj)TGtrK>f]b[Piow.gU+nC@s""""""4";
+    private const string Key = "kj)TGtrK>f]b[Piow.gU+nC@s\"\"\"\"\"\"4";
     private const string ModelPath = "oneocr.onemodel";
     
     public Line[]? RunOcr(Img img)
@@ -216,7 +218,7 @@ public class Ocr
             WriteIndented = true
         };
         var json = JsonSerializer.Serialize(lines, options);
-        _logger?.ZLogInformation($"{json}");
+        _logger?.ZLogDebug($"{json}");
     }
 }
 

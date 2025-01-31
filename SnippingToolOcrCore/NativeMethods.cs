@@ -82,7 +82,7 @@ namespace SnippingToolOcrCore
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         public static partial long OcrInitOptionsSetUseModelDelayLoad(long ctx, byte flag);
 
-        [LibraryImport("oneocr", StringMarshalling = StringMarshalling.Utf16)]
+        [LibraryImport("oneocr", StringMarshalling = StringMarshalling.Utf8)]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         public static partial long CreateOcrPipeline(string modelPath, string key, long ctx, out long pipeline);
 
