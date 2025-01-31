@@ -4,6 +4,7 @@
 using System.Runtime.InteropServices;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using ZLogger;
 
@@ -212,13 +213,14 @@ public class Ocr
         }
 
         // Output in JSON format
-        var options = new JsonSerializerOptions
-        {
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-            WriteIndented = true
-        };
-        var json = JsonSerializer.Serialize(lines, options);
+        var context = new SourceGenerationContext(new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+        var json = JsonSerializer.Serialize(lines, context.LineArray);
         _logger?.ZLogDebug($"{json}");
     }
 }
 
+[JsonSourceGenerationOptions(WriteIndented = true)]
+[JsonSerializable(typeof(Line[]))]
+internal partial class SourceGenerationContext : JsonSerializerContext
+{
+}

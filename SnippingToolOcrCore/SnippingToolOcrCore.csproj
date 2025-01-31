@@ -1,23 +1,37 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <OutputType>Library</OutputType>
+    <Version>1.0.0</Version>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     <LangVersion>default</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <AssemblyTitle>SnippingToolOcr</AssemblyTitle>
-    <Product>SnippingToolOcr</Product>
-    <Copyright>Copyright ©  2025</Copyright>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
+    <IsAotCompatible>true</IsAotCompatible>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <AssemblyName>SnippingToolOcrCore</AssemblyName>
-    <RootNamespace>SnippingToolOcrCore</RootNamespace>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>AC.SnippingToolOcrCore</PackageId>
+    <PackageVersion>$(Version)</PackageVersion>
+    <Title>SnippingTool OneOcr Wrapper</Title>
+    <Authors>ksasao;MIRIMIR</Authors>
+    <Company>AmusementClub (fork from ksasao)</Company>
+    <Description>Windows11 SnippingTool OCR Wrapper. Fork from ksasao, the original C++ code was written by b1tg</Description>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Copyright>Copyright ©  2025</Copyright>
+    <PackageTags>ocr</PackageTags>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+  </PropertyGroup>
+  
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
+  
   <ItemGroup>
     <PackageReference Include="ZLogger" Version="2.5.10" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE" Pack="true" PackagePath=""/>
+  </ItemGroup>
+  
 </Project>
