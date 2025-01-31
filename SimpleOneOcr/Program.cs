@@ -4,6 +4,7 @@ using System.Drawing.Imaging;
 using System.Runtime.Versioning;
 using Microsoft.Extensions.Logging;
 using ZLogger;
+using ConsoleAppFramework;
 
 namespace SimpleOneOcr;
 
@@ -11,20 +12,30 @@ class Program
 {
     static void Main(string[] args)
     {
+        ConsoleApp.Run(args, (
+            [Argument] string imagePath,
+            bool saveResultImage = false,
+            bool debug = false
+        ) => Execute(imagePath, saveResultImage, debug));
+    }
+    
+    static void Execute(string imagePath, bool saveResultImage, bool debug)
+    {
         using var factory = LoggerFactory.Create(logging =>
         {
-            logging.SetMinimumLevel(LogLevel.Information);
+            logging.SetMinimumLevel(debug ? LogLevel.Debug : LogLevel.Information);
             logging.AddZLoggerConsole();
         });
         var logger = factory.CreateLogger("SimpleOneOcr");
         
         var ocrEngine = new Ocr(logger);
         
-        var lines = ConvertToText(ocrEngine, args[0]);
+        var lines = ConvertToText(ocrEngine, imagePath);
         if (lines is null) return;
         
         ocrEngine.ResultWriteLines(lines);
-        // SaveResultImage(args[0], lines);
+        
+        if (saveResultImage) SaveResultImage(imagePath, lines);
     }
     
     [SupportedOSPlatform("windows")]
