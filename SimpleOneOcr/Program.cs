@@ -24,7 +24,7 @@ class Program
         if (lines is null) return;
         
         ocrEngine.ResultWriteLines(lines);
-        SaveResultImage(args[0], lines);
+        // SaveResultImage(args[0], lines);
     }
     
     [SupportedOSPlatform("windows")]
