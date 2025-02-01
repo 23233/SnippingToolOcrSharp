@@ -4,7 +4,7 @@ This code is a wrapper for easily using oneocr.dll, which is included in the Win
 Please refer to https://github.com/b1tg/win11-oneocr by b1tg for the original C++ code.
 
 ## Sample
-SimpleOneOcr is an explanation of how to use it.
+SimpleOneOcr is an explanation of how to use it. You can input an image file or a directory containing image files.
 
 ```
 Usage: [arguments...] [options...] [-h|--help] [--version]
