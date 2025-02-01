@@ -10,7 +10,7 @@ using ZLogger;
 
 namespace SnippingToolOcrCore;
 
-public class Ocr
+public class Ocr : IDisposable
 {
     public bool IsAvailable { get; private set; } = false;
     private long Context { get; set; }
@@ -58,7 +58,7 @@ public class Ocr
     // == MAGIC_NUMBER (0 vs. 1) Unable to uncompress. Source data mismatch.
     private const string Key = "kj)TGtrK>f]b[Piow.gU+nC@s\"\"\"\"\"\"4";
     private const string ModelPath = "oneocr.onemodel";
-    
+
     public Line[]? RunOcr(Img img)
     {
         var ctx = Context;
@@ -106,7 +106,6 @@ public class Ocr
         _logger?.ZLogDebug($"Recognize {lineCount} lines");
 
         List<Line> lines = [];
-
         // Get the content of each line
         for (var i = 0; i < lineCount; i++)
         {
@@ -200,6 +199,12 @@ public class Ocr
             data.Words = words.ToArray();
             lines.Add(data);
         }
+
+        // 1
+        _ = NativeMethods.ReleaseOcrResult(instance);
+        _ = NativeMethods.ReleaseOcrProcessOptions(opt);
+        _ = NativeMethods.ReleaseOcrPipeline(pipeline);
+
         return lines.ToArray();
     }
 
@@ -216,6 +221,29 @@ public class Ocr
         var context = new SourceGenerationContext(new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
         var json = JsonSerializer.Serialize(lines, context.LineArray);
         _logger?.ZLogDebug($"{json}");
+    }
+
+    private bool disposedValue;
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                _ = NativeMethods.ReleaseOcrInitOptions(Context);
+                IsAvailable = false;
+            }
+
+            // TODO: free unmanaged resources (unmanaged objects) and override finalizer
+            // TODO: set large fields to null
+            disposedValue = true;
+        }
+    }
+    
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }
 

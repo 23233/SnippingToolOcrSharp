@@ -29,13 +29,35 @@ class Program
         var logger = factory.CreateLogger("SimpleOneOcr");
         
         var ocrEngine = new Ocr(logger);
+
+        if (Directory.Exists(imagePath))
+        {
+            var root = new DirectoryInfo(imagePath);
+            var files = root.GetFiles();
+            
+            foreach (var f in files)
+            {
+                var lines = ConvertToText(ocrEngine, f.FullName);
+                if (lines is null) continue;
         
-        var lines = ConvertToText(ocrEngine, imagePath);
-        if (lines is null) return;
+                ocrEngine.ResultWriteLines(lines);
         
-        ocrEngine.ResultWriteLines(lines);
+                if (saveResultImage) SaveResultImage(f.FullName, lines);
+            }
+        }
+        else if (File.Exists(imagePath))
+        {
+            var lines = ConvertToText(ocrEngine, imagePath);
+            if (lines is null) return;
         
-        if (saveResultImage) SaveResultImage(imagePath, lines);
+            ocrEngine.ResultWriteLines(lines);
+        
+            if (saveResultImage) SaveResultImage(imagePath, lines);
+        }
+        else
+        {
+            logger.ZLogError($"Please use correct path: {imagePath}");
+        }
     }
     
     [SupportedOSPlatform("windows")]

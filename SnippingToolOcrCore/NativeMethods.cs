@@ -33,22 +33,34 @@ namespace SnippingToolOcrCore
         [LibraryImport("oneocr")]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         public static partial long CreateOcrInitOptions(out long ctx);
-
+        
+        [LibraryImport("oneocr", StringMarshalling = StringMarshalling.Utf8)]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial long CreateOcrPipeline(string modelPath, string key, long ctx, out long pipeline);
+        
         [LibraryImport("oneocr")]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-        public static partial long GetOcrLineCount(long instance, out long count);
+        public static partial long CreateOcrProcessOptions(out long opt);
+        
+        // GetImageAngle
 
         [LibraryImport("oneocr")]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         public static partial long GetOcrLine(long instance, long index, out long line);
-
+        
+        [LibraryImport("oneocr")]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial long GetOcrLineBoundingBox(long line, out IntPtr boundingBoxPtr);
+        
         [LibraryImport("oneocr")]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         public static partial long GetOcrLineContent(long line, out IntPtr content);
 
         [LibraryImport("oneocr")]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-        public static partial long GetOcrLineBoundingBox(long line, out IntPtr boundingBoxPtr);
+        public static partial long GetOcrLineCount(long instance, out long count);
+
+        // GetOcrLineStyle
 
         [LibraryImport("oneocr")]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
@@ -57,6 +69,12 @@ namespace SnippingToolOcrCore
         [LibraryImport("oneocr")]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         public static partial long GetOcrWord(long instance, long index, out long line);
+        
+        [LibraryImport("oneocr")]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial long GetOcrWordBoundingBox(long line, out IntPtr boundingBoxPtr);
+        
+        // GetOcrWordConfidence
 
         [LibraryImport("oneocr")]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
@@ -64,27 +82,35 @@ namespace SnippingToolOcrCore
 
         [LibraryImport("oneocr")]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-        public static partial long GetOcrWordBoundingBox(long line, out IntPtr boundingBoxPtr);
+        public static partial long OcrInitOptionsSetUseModelDelayLoad(long ctx, byte flag);
+        
+        // OcrProcessOptionsGetMaxRecognitionLineCount
+        // OcrProcessOptionsGetResizeResolution
 
         [LibraryImport("oneocr")]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         public static partial long OcrProcessOptionsSetMaxRecognitionLineCount(long opt, long count);
 
+        // OcrProcessOptionsSetResizeResolution
+
+        [LibraryImport("oneocr")]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial long ReleaseOcrInitOptions(long ctx);
+
+        [LibraryImport("oneocr")]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial long ReleaseOcrPipeline(long pipeline);
+        
+        [LibraryImport("oneocr")]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial long ReleaseOcrProcessOptions(long opt);
+        
+        [LibraryImport("oneocr")]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial long ReleaseOcrResult(long instance);
+        
         [LibraryImport("oneocr")]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         public static partial long RunOcrPipeline(long pipeline, ref Img img, long opt, out long instance);
-
-        [LibraryImport("oneocr")]
-        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-        public static partial long CreateOcrProcessOptions(out long opt);
-
-        [LibraryImport("oneocr")]
-        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-        public static partial long OcrInitOptionsSetUseModelDelayLoad(long ctx, byte flag);
-
-        [LibraryImport("oneocr", StringMarshalling = StringMarshalling.Utf8)]
-        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
-        public static partial long CreateOcrPipeline(string modelPath, string key, long ctx, out long pipeline);
-
     }
 }
