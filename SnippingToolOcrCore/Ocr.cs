@@ -51,7 +51,7 @@ public class Ocr : IDisposable
     private const string Key = "kj)TGtrK>f]b[Piow.gU+nC@s\"\"\"\"\"\"4";
     private const string ModelPath = "oneocr.onemodel";
 
-    public void CreatePipelineAndProcessOptions()
+    public void CreatePipelineAndProcessOptions(long maxRecognitionLineCount = 1000)
     {
         // Create OCR pipeline
         var res = NativeMethods.CreateOcrPipeline(ModelPath, Key, Context, out var pipeline);
@@ -70,7 +70,7 @@ public class Ocr : IDisposable
         }
         ProcessOptions = opt;
 
-        res = NativeMethods.OcrProcessOptionsSetMaxRecognitionLineCount(ProcessOptions, 1000);
+        res = NativeMethods.OcrProcessOptionsSetMaxRecognitionLineCount(ProcessOptions, maxRecognitionLineCount);
         if (res != 0)
         {
             _logger?.ZLogError($"Failed to set max recognition line count.");
