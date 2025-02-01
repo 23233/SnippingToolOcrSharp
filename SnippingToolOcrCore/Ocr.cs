@@ -2,9 +2,6 @@
 // Modifications made by MIR.
 
 using System.Runtime.InteropServices;
-using System.Text.Encodings.Web;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using ZLogger;
 
@@ -35,7 +32,6 @@ public class Ocr : IDisposable
         }
 
         IsAvailable = true;
-
     }
 
     public Ocr(ILogger? logger = null)
@@ -207,22 +203,8 @@ public class Ocr : IDisposable
 
         return lines.ToArray();
     }
-
-    public void ResultWriteLines(Line[]? lines)
-    {
-        if (lines == null) return;
-        
-        for (var i = 0; i < lines.Length; i++)
-        {
-            _logger?.ZLogInformation($"{i}: {lines[i]}");
-        }
-
-        // Output in JSON format
-        var context = new SourceGenerationContext(new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
-        var json = JsonSerializer.Serialize(lines, context.LineArray);
-        _logger?.ZLogDebug($"{json}");
-    }
-
+    
+    
     private bool disposedValue;
     protected virtual void Dispose(bool disposing)
     {
@@ -247,8 +229,4 @@ public class Ocr : IDisposable
     }
 }
 
-[JsonSourceGenerationOptions(WriteIndented = true)]
-[JsonSerializable(typeof(Line[]))]
-internal partial class SourceGenerationContext : JsonSerializerContext
-{
-}
+

@@ -1,10 +1,15 @@
 ﻿using SnippingToolOcrCore;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.Runtime.Versioning;
 using Microsoft.Extensions.Logging;
 using ZLogger;
 using ConsoleAppFramework;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
 namespace SimpleOneOcr;
 
@@ -32,17 +37,18 @@ class Program
 
         if (Directory.Exists(imagePath))
         {
-            var root = new DirectoryInfo(imagePath);
-            var files = root.GetFiles();
+            var files = Directory.GetFiles(imagePath)
+                .OrderBy(f => NaturalSortKey(Path.GetFileNameWithoutExtension(f)))
+                .ToList();
             
             foreach (var f in files)
             {
-                var lines = ConvertToText(ocrEngine, f.FullName);
+                var lines = ConvertToText(ocrEngine, f);
                 if (lines is null) continue;
         
-                ocrEngine.ResultWriteLines(lines);
+                ResultWriteLines(lines, debug, logger);
         
-                if (saveResultImage) SaveResultImage(f.FullName, lines);
+                if (saveResultImage) SaveResultImage(f, lines);
             }
         }
         else if (File.Exists(imagePath))
@@ -50,7 +56,7 @@ class Program
             var lines = ConvertToText(ocrEngine, imagePath);
             if (lines is null) return;
         
-            ocrEngine.ResultWriteLines(lines);
+            ResultWriteLines(lines, debug, logger);
         
             if (saveResultImage) SaveResultImage(imagePath, lines);
         }
@@ -138,4 +144,37 @@ class Program
         font.Dispose();
         imgRgba.Save(imagePath + "_result.jpg", ImageFormat.Jpeg);
     }
+    
+    private static string NaturalSortKey(string input)
+    {
+        return Regex.Replace(input, @"\d+", match => match.Value.PadLeft(10, '0'));
+    }
+    
+    private static void ResultWriteLines(Line[]? lines, bool debug = false, ILogger? logger = null)
+    {
+        if (lines == null) return;
+        
+        for (var i = 0; i < lines.Length; i++)
+        {
+            if (debug)
+            {
+                logger?.ZLogInformation($"{i}: {lines[i]}");
+            }
+            else
+            {
+                logger?.ZLogInformation($"{lines[i].Text}");
+            }
+        }
+
+        // Output in JSON format
+        var context = new SourceGenerationContext(new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+        var json = JsonSerializer.Serialize(lines, context.LineArray);
+        logger?.ZLogDebug($"{json}");
+    }
+}
+
+[JsonSourceGenerationOptions(WriteIndented = true)]
+[JsonSerializable(typeof(Line[]))]
+internal partial class SourceGenerationContext : JsonSerializerContext
+{
 }
