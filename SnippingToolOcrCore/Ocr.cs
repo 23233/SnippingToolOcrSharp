@@ -9,8 +9,9 @@ namespace SnippingToolOcrCore;
 
 public class Ocr : IDisposable
 {
-    public bool IsAvailable { get; private set; } = false;
     private long Context { get; set; }
+    private long Pipeline { get; set; }
+    private long ProcessOptions { get; set; }
     private ILogger? _logger { get; set; }
     private void Initialize()
     {
@@ -18,8 +19,7 @@ public class Ocr : IDisposable
         var res = NativeMethods.CreateOcrInitOptions(out var ctx);
         if (res != 0)
         {
-            _logger?.ZLogError($"Failed to create OCR init options.");
-            return;
+            throw new InvalidOperationException("Failed to create OCR init options.");
         }
         Context = ctx;
 
@@ -27,11 +27,8 @@ public class Ocr : IDisposable
         res = NativeMethods.OcrInitOptionsSetUseModelDelayLoad(ctx, 0);
         if (res != 0)
         {
-            _logger?.ZLogError($"Failed to set model delay load.");
-            return;
+            throw new InvalidOperationException("Failed to set model delay load.");
         }
-
-        IsAvailable = true;
     }
 
     public Ocr(ILogger? logger = null)
@@ -43,8 +40,7 @@ public class Ocr : IDisposable
         }
         catch (DllNotFoundException)
         {
-            _logger?.ZLogError($"Can not find oneocr.dll, onnxruntime.dll and oneocr.onemodel");
-            throw;
+            throw new DllNotFoundException("Can not find oneocr.dll, onnxruntime.dll and oneocr.onemodel");
         }
         
     }
@@ -55,36 +51,47 @@ public class Ocr : IDisposable
     private const string Key = "kj)TGtrK>f]b[Piow.gU+nC@s\"\"\"\"\"\"4";
     private const string ModelPath = "oneocr.onemodel";
 
-    public Line[]? RunOcr(Img img)
+    public void CreatePipelineAndProcessOptions()
     {
-        var ctx = Context;
-
         // Create OCR pipeline
-        var res = NativeMethods.CreateOcrPipeline(ModelPath, Key, ctx, out var pipeline);
+        var res = NativeMethods.CreateOcrPipeline(ModelPath, Key, Context, out var pipeline);
         if (res != 0)
         {
-            _logger?.ZLogError($"Failed to create OCR pipeline. Error code: {res}");
-            return null;
+            throw new InvalidOperationException($"Failed to create OCR pipeline. Error code: {res}");
         }
-
+        Pipeline = pipeline;
+        _logger?.ZLogDebug($"OCR model loaded");
+        
         // Set process options
         res = NativeMethods.CreateOcrProcessOptions(out var opt);
         if (res != 0)
         {
-            _logger?.ZLogError($"Failed to create OCR process options.");
-            return null;
+            throw new InvalidOperationException("Failed to create OCR process options.");
         }
-        _logger?.ZLogDebug($"OCR model loaded");
+        ProcessOptions = opt;
 
-        res = NativeMethods.OcrProcessOptionsSetMaxRecognitionLineCount(opt, 1000);
+        res = NativeMethods.OcrProcessOptionsSetMaxRecognitionLineCount(ProcessOptions, 1000);
         if (res != 0)
         {
             _logger?.ZLogError($"Failed to set max recognition line count.");
-            return null;
+        }
+    }
+
+    public void ReleasePipelineAndProcessOptions()
+    {
+        if (ProcessOptions != 0) _ = NativeMethods.ReleaseOcrProcessOptions(ProcessOptions);
+        if (Pipeline != 0) _ = NativeMethods.ReleaseOcrPipeline(Pipeline);
+    }
+    
+    public Line[]? RunOcr(Img img)
+    {
+        if (ProcessOptions is 0 || Pipeline is 0)
+        {
+            throw new InvalidOperationException("Please call CreatePipelineAndProcessOptions() first.");
         }
         
         // Run OCR pipeline
-        res = NativeMethods.RunOcrPipeline(pipeline, ref img, opt, out var instance);
+        var res = NativeMethods.RunOcrPipeline(Pipeline, ref img, ProcessOptions, out var instance);
         if (res != 0)
         {
             _logger?.ZLogError($"Failed to run OCR pipeline. Error code: {res}");
@@ -198,8 +205,6 @@ public class Ocr : IDisposable
 
         // 1
         _ = NativeMethods.ReleaseOcrResult(instance);
-        _ = NativeMethods.ReleaseOcrProcessOptions(opt);
-        _ = NativeMethods.ReleaseOcrPipeline(pipeline);
 
         return lines.ToArray();
     }
@@ -212,8 +217,8 @@ public class Ocr : IDisposable
         {
             if (disposing)
             {
+                ReleasePipelineAndProcessOptions();
                 _ = NativeMethods.ReleaseOcrInitOptions(Context);
-                IsAvailable = false;
             }
 
             // TODO: free unmanaged resources (unmanaged objects) and override finalizer

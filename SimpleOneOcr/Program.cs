@@ -1,7 +1,6 @@
 ﻿using SnippingToolOcrCore;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Globalization;
 using System.Runtime.Versioning;
 using Microsoft.Extensions.Logging;
 using ZLogger;
@@ -34,6 +33,7 @@ class Program
         var logger = factory.CreateLogger("SimpleOneOcr");
         
         var ocrEngine = new Ocr(logger);
+        ocrEngine.CreatePipelineAndProcessOptions();
 
         if (Directory.Exists(imagePath))
         {
@@ -64,6 +64,8 @@ class Program
         {
             logger.ZLogError($"Please use correct path: {imagePath}");
         }
+        
+        ocrEngine.Dispose();
     }
     
     [SupportedOSPlatform("windows")]
