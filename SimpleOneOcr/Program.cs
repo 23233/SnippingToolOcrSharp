@@ -33,7 +33,7 @@ class Program
         var logger = factory.CreateLogger("SimpleOneOcr");
         
         var ocrEngine = new Ocr(logger);
-        ocrEngine.CreatePipelineAndProcessOptions();
+        ocrEngine.CreatePipelineAndProcessOptions(1000);
 
         if (Directory.Exists(imagePath))
         {
@@ -72,7 +72,8 @@ class Program
     static Line[]? ConvertToText(Ocr ocrEngine, string imageFileName)
     {
         // Load the image
-        var img = new Bitmap(imageFileName);
+        var img = ResizeImage(new Bitmap(imageFileName));
+
         if (img is null)
         {
             throw new Exception("Can't read image!");
@@ -114,6 +115,24 @@ class Program
         {
             img.Dispose();
         }
+    }
+    
+    private static Bitmap ResizeImage(Bitmap image)
+    {
+        if (image is { Width: >= 50, Height: >= 50 }) return image;
+        var ratio = Math.Max(50.0 / image.Width, 50.0 / image.Height);
+
+        var newWidth = Math.Max((int)Math.Ceiling(image.Width * ratio), 50);
+        var newHeight = Math.Max((int)Math.Ceiling(image.Height * ratio), 50);
+
+        var newImage = new Bitmap(newWidth, newHeight);
+        using var graphics = Graphics.FromImage(newImage);
+        graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+        graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+        graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+
+        graphics.DrawImage(image, 0, 0, newWidth, newHeight);
+        return newImage;
     }
     
     [SupportedOSPlatform("windows")]
