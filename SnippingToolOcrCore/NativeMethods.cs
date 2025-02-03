@@ -84,14 +84,25 @@ namespace SnippingToolOcrCore
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         public static partial long OcrInitOptionsSetUseModelDelayLoad(long ctx, byte flag);
         
-        // OcrProcessOptionsGetMaxRecognitionLineCount
-        // OcrProcessOptionsGetResizeResolution
+        // default is 100
+        [LibraryImport("oneocr")]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial long OcrProcessOptionsGetMaxRecognitionLineCount(long opt, out long count);
+        
+        // default is 1152 and 768
+        [LibraryImport("oneocr")]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial long OcrProcessOptionsGetResizeResolution(long opt, out long v1, out long v2);
 
+        // default is 100, range is 0-1000
         [LibraryImport("oneocr")]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         public static partial long OcrProcessOptionsSetMaxRecognitionLineCount(long opt, long count);
 
-        // OcrProcessOptionsSetResizeResolution
+        // max is 1152 and 768, resize to small resolution maybe faster
+        [LibraryImport("oneocr")]
+        [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+        public static partial long OcrProcessOptionsSetResizeResolution(long opt, long v1, long v2);
 
         [LibraryImport("oneocr")]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
@@ -109,6 +120,7 @@ namespace SnippingToolOcrCore
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         public static partial long ReleaseOcrResult(long instance);
         
+        // image resolution must be great than 50*50, otherwise it will return 3
         [LibraryImport("oneocr")]
         [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
         public static partial long RunOcrPipeline(long pipeline, ref Img img, long opt, out long instance);
