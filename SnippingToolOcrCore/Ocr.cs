@@ -98,6 +98,10 @@ public class Ocr : IDisposable
         if (res != 0)
         {
             _logger?.ZLogError($"Failed to run OCR pipeline. Error code: {res}");
+            if (res == 3)
+            {
+                _logger?.ZLogError($"Perhaps because the image resolution is less than 50*50");
+            }
             return null;
         }
         _logger?.ZLogDebug($"Running ocr pipeline");
