@@ -6,7 +6,15 @@ on:
       version:
         description: 'Release version'
         required: true
-        default: '1.0.0'
+        default: '1.0.4'
+      framework:
+        description: 'Target framework'
+        required: true
+        default: 'net8.0'
+        type: choice
+        options:
+          - net8.0
+          - net9.0
 
 permissions:
   contents: write
@@ -22,17 +30,19 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '9.x'  # 根据你的项目需要修改.NET版本
+        dotnet-version: |
+          8.0.x
+          9.0.x
 
     - name: Build project
-      run: dotnet publish SnippingToolOcrCore/SnippingToolOcrCore.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./publish
+      run: dotnet publish SnippingToolOcrCore/SnippingToolOcrCore.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -f ${{ github.event.inputs.framework }} -o ./publish
 
     - name: Create Release
       id: create_release
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: v${{ github.event.inputs.version }}
-        name: Release v${{ github.event.inputs.version }}
+        tag_name: v${{ github.event.inputs.version }}-${{ github.event.inputs.framework }}
+        name: Release v${{ github.event.inputs.version }} (${{ github.event.inputs.framework }})
         draft: false
         prerelease: false
         files: ./publish/*.exe
