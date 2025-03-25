@@ -1,4 +1,4 @@
-﻿using SnippingToolOcrCore;
+using SnippingToolOcrCore;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.Versioning;
@@ -19,11 +19,12 @@ class Program
         ConsoleApp.Run(args, (
             [Argument] string imagePath,
             bool saveResultImage = false,
+            bool saveJson = false,
             bool debug = false
-        ) => Execute(imagePath, saveResultImage, debug));
+        ) => Execute(imagePath, saveResultImage, saveJson, debug));
     }
     
-    static void Execute(string imagePath, bool saveResultImage, bool debug)
+    static void Execute(string imagePath, bool saveResultImage, bool saveJson, bool debug)
     {
         using var factory = LoggerFactory.Create(logging =>
         {
@@ -49,6 +50,7 @@ class Program
                 ResultWriteLines(lines, debug, logger);
         
                 if (saveResultImage) SaveResultImage(f, lines);
+                if (saveJson) SaveJsonResult(f, lines, logger);
             }
         }
         else if (File.Exists(imagePath))
@@ -59,6 +61,7 @@ class Program
             ResultWriteLines(lines, debug, logger);
         
             if (saveResultImage) SaveResultImage(imagePath, lines);
+            if (saveJson) SaveJsonResult(imagePath, lines, logger);
         }
         else
         {
@@ -191,6 +194,26 @@ class Program
         var context = new SourceGenerationContext(new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
         var json = JsonSerializer.Serialize(lines, context.LineArray);
         logger?.ZLogDebug($"{json}");
+    }
+
+    private static void SaveJsonResult(string imagePath, Line[] lines, ILogger logger)
+    {
+        try
+        {
+            string jsonFilePath = Path.ChangeExtension(imagePath, ".json");
+            var context = new SourceGenerationContext(new JsonSerializerOptions 
+            { 
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                WriteIndented = true 
+            });
+            var json = JsonSerializer.Serialize(lines, context.LineArray);
+            File.WriteAllText(jsonFilePath, json);
+            logger.ZLogInformation($"JSON result saved to {jsonFilePath}");
+        }
+        catch (Exception ex)
+        {
+            logger.ZLogError(ex, $"Failed to save JSON result for {imagePath}");
+        }
     }
 }
 
