@@ -10,11 +10,11 @@ on:
       framework:
         description: 'Target framework'
         required: true
-        default: 'net8.0'
+        default: 'net9.0-windows'
         type: choice
         options:
-          - net8.0
-          - net9.0
+          - net9.0-windows
+          - net8.0-windows
 
 permissions:
   contents: write
