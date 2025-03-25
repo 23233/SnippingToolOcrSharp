@@ -34,8 +34,8 @@ jobs:
           8.0.x
           9.0.x
 
-    - name: Build project
-      run: dotnet publish SnippingToolOcrCore/SnippingToolOcrCore.csproj -c Release -f ${{ github.event.inputs.framework }} -o ./publish
+    - name: Build SimpleOneOcr
+      run: dotnet publish SimpleOneOcr/SimpleOneOcr.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -f ${{ github.event.inputs.framework }} -o ./publish
 
     - name: Create Release
       id: create_release
@@ -45,5 +45,5 @@ jobs:
         name: Release v${{ github.event.inputs.version }} (${{ github.event.inputs.framework }})
         draft: false
         prerelease: false
-        files: ./publish/*
+        files: ./publish/*.exe
         token: ${{ secrets.GITHUB_TOKEN }}
