@@ -1,18 +1,19 @@
-name: Publish SnippingToolOcrCore Package
+name: Build and Release
 
 on:
-#   release:
-#     types:
-#       - published
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version'
+        required: true
+        default: '1.0.0'
 
 permissions:
-  packages: write
-  contents: read
+  contents: write
 
 jobs:
-  publish:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: windows-latest  # 使用Windows运行时以生成.exe文件
 
     steps:
     - name: Checkout code
@@ -21,13 +22,18 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '9.x'
+        dotnet-version: '9.x'  # 根据你的项目需要修改.NET版本
 
-    - name: Prep packages
-      run: dotnet nuget add source --username MIRIMIRIM --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/MIRIMIRIM/index.json"
+    - name: Build project
+      run: dotnet publish SnippingToolOcrCore/SnippingToolOcrCore.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./publish
 
-    - name: Pack the NuGet package
-      run: dotnet pack SnippingToolOcrCore/SnippingToolOcrCore.csproj -c Release -o ./artifacts
-
-    - name: Publish to GitHub Packages
-      run: dotnet nuget push ./artifacts/*.nupkg --source "github" --api-key ${{ secrets.GITHUB_TOKEN }}
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ github.event.inputs.version }}
+        name: Release v${{ github.event.inputs.version }}
+        draft: false
+        prerelease: false
+        files: ./publish/*.exe
+        token: ${{ secrets.GITHUB_TOKEN }}
