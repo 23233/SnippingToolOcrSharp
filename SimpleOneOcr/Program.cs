@@ -1051,7 +1051,7 @@ public class OcrForm : Form
         {
             FlowDirection = FlowDirection.LeftToRight,
             AutoSize = true,
-            Location = new Point(serverControlPanel.Width - 130, 10),
+            Location = new Point(serverControlPanel.Width - 180, 10),
             Anchor = AnchorStyles.Right | AnchorStyles.Top
         };
         serverControlPanel.Controls.Add(serverButtonPanel);
@@ -1082,7 +1082,7 @@ public class OcrForm : Form
             ForeColor = Color.White,
             Font = new Font("Segoe UI", 12, FontStyle.Bold),
             Cursor = Cursors.Hand,
-            Margin = new Padding(5, 0, 0, 0)
+            Margin = new Padding(0, 3, 0, 0)
         };
         helpButton.FlatAppearance.BorderSize = 0;
         serverButtonPanel.Controls.Add(helpButton);
