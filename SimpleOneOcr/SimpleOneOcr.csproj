@@ -11,7 +11,6 @@
         <UseWindowsForms>true</UseWindowsForms>
         <PublishSingleFile>true</PublishSingleFile>
         <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-        <SelfContained>true</SelfContained>
     </PropertyGroup>
 
     <ItemGroup>
@@ -28,18 +27,6 @@
 
     <ItemGroup>
       <FrameworkReference Include="Microsoft.WindowsDesktop.App" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <None Include="oneocr.dll" CopyToOutputDirectory="PreserveNewest">
-        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      </None>
-      <None Include="onnxruntime.dll" CopyToOutputDirectory="PreserveNewest">
-        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      </None>
-      <None Include="oneocr.onemodel" CopyToOutputDirectory="PreserveNewest">
-        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      </None>
     </ItemGroup>
 
 </Project>
