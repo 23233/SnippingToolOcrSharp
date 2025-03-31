@@ -6,10 +6,12 @@
         <Version>1.0.3</Version>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <IlcGenerateMstatFile>true</IlcGenerateMstatFile>
-        <IlcGenerateDgmlFile>true</IlcGenerateDgmlFile>
         <UseWindowsForms>true</UseWindowsForms>
         <PublishSingleFile>true</PublishSingleFile>
+        <PublishTrimmed>true</PublishTrimmed>
+        <TrimMode>partial</TrimMode>
+        <DebugType>none</DebugType>
+        <DebugSymbols>false</DebugSymbols>
     </PropertyGroup>
 
     <ItemGroup>
