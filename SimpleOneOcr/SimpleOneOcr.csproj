@@ -10,7 +10,6 @@
         <IlcGenerateDgmlFile>true</IlcGenerateDgmlFile>
         <UseWindowsForms>true</UseWindowsForms>
         <PublishSingleFile>true</PublishSingleFile>
-        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     </PropertyGroup>
 
     <ItemGroup>

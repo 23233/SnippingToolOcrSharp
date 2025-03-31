@@ -716,11 +716,15 @@ public class OcrForm : Form
     private Label serverStatsLabel;
     private System.Windows.Forms.Timer statsUpdateTimer;
     private int currentServerPort = 0;
+    private Label modelStatusLabel;
 
     public OcrForm()
     {
         InitializeComponents();
-        InitializeOcr();
+        InitializeLogger();
+        
+        // 检查模型文件
+        CheckModelFiles();
         
         // 自动启动web服务器
         ToggleServerButton_Click(this, EventArgs.Empty);
@@ -732,7 +736,7 @@ public class OcrForm : Form
         statsUpdateTimer.Start();
     }
 
-    private void InitializeOcr()
+    private void InitializeLogger()
     {
         var factory = LoggerFactory.Create(logging =>
         {
@@ -740,8 +744,17 @@ public class OcrForm : Form
             logging.AddZLoggerConsole();
         });
         logger = factory.CreateLogger("SimpleOneOcr");
-        ocrEngine = new Ocr(logger);
-        ocrEngine.CreatePipelineAndProcessOptions(1000);
+    }
+
+    // 移除InitializeOcr方法，改为按需创建OCR引擎
+    private Ocr GetOcrEngine()
+    {
+        if (ocrEngine == null)
+        {
+            ocrEngine = new Ocr(logger);
+            ocrEngine.CreatePipelineAndProcessOptions(1000);
+        }
+        return ocrEngine;
     }
 
     private void InitializeComponents()
@@ -760,17 +773,37 @@ public class OcrForm : Form
         };
         this.Controls.Add(mainPanel);
 
+        // 创建底部状态面板
+        Panel bottomPanel = new Panel
+        {
+            Dock = DockStyle.Bottom,
+            Height = 30
+        };
+        mainPanel.Controls.Add(bottomPanel);
+
+        // 模型状态标签
+        modelStatusLabel = new Label
+        {
+            TextAlign = ContentAlignment.MiddleLeft,
+            Dock = DockStyle.Left,
+            AutoSize = true,
+            Font = new Font("Segoe UI", 9, FontStyle.Regular),
+            Padding = new Padding(10, 0, 0, 0)
+        };
+        bottomPanel.Controls.Add(modelStatusLabel);
+
         // 版权标签
         copyrightLabel = new Label
         {
             Text = "© 52pojie xxssxx",
             TextAlign = ContentAlignment.MiddleRight,
-            Dock = DockStyle.Bottom,
-            Height = 30,
+            Dock = DockStyle.Right,
+            AutoSize = true,
             Font = new Font("Segoe UI", 9, FontStyle.Regular),
-            ForeColor = Color.Gray
+            ForeColor = Color.Gray,
+            Padding = new Padding(0, 0, 10, 0)
         };
-        mainPanel.Controls.Add(copyrightLabel);
+        bottomPanel.Controls.Add(copyrightLabel);
 
         // 结果标签页控件
         resultTabControl = new TabControl
@@ -1038,8 +1071,25 @@ public class OcrForm : Form
         startServerButton.FlatAppearance.BorderSize = 0;
         serverButtonPanel.Controls.Add(startServerButton);
 
+        // 添加帮助按钮
+        Button helpButton = new Button
+        {
+            Text = "?",
+            Width = 32,
+            Height = 32,
+            FlatStyle = FlatStyle.Flat,
+            BackColor = Color.FromArgb(0, 120, 212),
+            ForeColor = Color.White,
+            Font = new Font("Segoe UI", 12, FontStyle.Bold),
+            Cursor = Cursors.Hand,
+            Margin = new Padding(5, 0, 0, 0)
+        };
+        helpButton.FlatAppearance.BorderSize = 0;
+        serverButtonPanel.Controls.Add(helpButton);
+
         // 注册事件处理程序
         startServerButton.Click += ToggleServerButton_Click;
+        helpButton.Click += HelpButton_Click;
     }
 
     private void DropPanel_DragEnter(object sender, DragEventArgs e)
@@ -1115,7 +1165,12 @@ public class OcrForm : Form
         statsUpdateTimer.Stop();
         statsUpdateTimer.Dispose();
         
-        ocrEngine?.Dispose();
+        // 释放OCR引擎资源（如果已创建）
+        if (ocrEngine != null)
+        {
+            ocrEngine.Dispose();
+            ocrEngine = null;
+        }
 
         if (originalImageBox.Image != null)
         {
@@ -1158,40 +1213,45 @@ public class OcrForm : Form
             {
                 try
                 {
-                    var results = Program.ConvertToText(ocrEngine, imagePath);
-
-                    this.Invoke(new Action(() =>
+                    // 在这里按需创建OCR引擎
+                    using (var tempOcrEngine = new Ocr(logger))
                     {
-                        if (results != null)
-                        {
-                            currentResults = results;
+                        tempOcrEngine.CreatePipelineAndProcessOptions(1000);
+                        var results = Program.ConvertToText(tempOcrEngine, imagePath);
 
-                            textResultBox.Clear();
-                            foreach (var line in results)
+                        this.Invoke(new Action(() =>
+                        {
+                            if (results != null)
                             {
-                                textResultBox.AppendText(line.Text + Environment.NewLine);
+                                currentResults = results;
+
+                                textResultBox.Clear();
+                                foreach (var line in results)
+                                {
+                                    textResultBox.AppendText(line.Text + Environment.NewLine);
+                                }
+
+                                var context = new SourceGenerationContext(new JsonSerializerOptions
+                                {
+                                    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                                    WriteIndented = true
+                                });
+                                var json = JsonSerializer.Serialize(results, context.LineArray);
+                                jsonResultBox.Text = json;
+
+                                GenerateAndShowResultImage(imagePath, results);
+
+                                saveImageButton.Enabled = true;
+                                saveJsonButton.Enabled = true;
+
+                                statusLabel.Text = "处理完成";
                             }
-
-                            var context = new SourceGenerationContext(new JsonSerializerOptions
+                            else
                             {
-                                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                                WriteIndented = true
-                            });
-                            var json = JsonSerializer.Serialize(results, context.LineArray);
-                            jsonResultBox.Text = json;
-
-                            GenerateAndShowResultImage(imagePath, results);
-
-                            saveImageButton.Enabled = true;
-                            saveJsonButton.Enabled = true;
-
-                            statusLabel.Text = "处理完成";
-                        }
-                        else
-                        {
-                            statusLabel.Text = "处理失败";
-                        }
-                    }));
+                                statusLabel.Text = "处理失败";
+                            }
+                        }));
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -1348,6 +1408,63 @@ public class OcrForm : Form
     private void StatsUpdateTimer_Tick(object sender, EventArgs e)
     {
         UpdateServerStats();
+    }
+
+    private void HelpButton_Click(object sender, EventArgs e)
+    {
+        string apiUsageInfo = 
+            "OCR API 使用说明:\r\n\r\n" +
+            $"服务地址: http://localhost:{currentServerPort}/\r\n\r\n" +
+            "方法 1: 使用 multipart/form-data 上传图片文件\r\n" +
+            "- HTTP 方法: POST\r\n" +
+            "- Content-Type: multipart/form-data\r\n" +
+            "- 表单字段名: image\r\n\r\n" +
+            "示例 (curl):\r\n" +
+            $"curl -X POST -F \"image=@图片路径.jpg\" http://localhost:{currentServerPort}/\r\n\r\n" +
+            "方法 2: 使用 JSON 发送 Base64 编码的图片\r\n" +
+            "- HTTP 方法: POST\r\n" +
+            "- Content-Type: application/json\r\n" +
+            "- 请求体: {\"image\": \"base64编码的图片数据\"}\r\n\r\n" +
+            "响应格式:\r\n" +
+            "- Content-Type: application/json\r\n" +
+            "- 响应体: {\"text\": \"识别的文本\", \"json\": [详细的识别结果]}\r\n\r\n" +
+            "注意: 服务器仅接受来自本地的请求 (localhost/127.0.0.1)";
+
+        MessageBox.Show(apiUsageInfo, "OCR API 使用说明", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
+    private void CheckModelFiles()
+    {
+        string currentDir = AppDomain.CurrentDomain.BaseDirectory;
+        bool oneOcrDllExists = File.Exists(Path.Combine(currentDir, "oneocr.dll"));
+        bool onnxRuntimeDllExists = File.Exists(Path.Combine(currentDir, "onnxruntime.dll"));
+        bool oneModelExists = File.Exists(Path.Combine(currentDir, "oneocr.onemodel"));
+
+        if (oneOcrDllExists && onnxRuntimeDllExists && oneModelExists)
+        {
+            modelStatusLabel.Text = "模型文件: 正常";
+            modelStatusLabel.ForeColor = Color.Green;
+        }
+        else
+        {
+            StringBuilder missingFiles = new StringBuilder("缺失模型文件: ");
+            if (!oneOcrDllExists) missingFiles.Append("oneocr.dll ");
+            if (!onnxRuntimeDllExists) missingFiles.Append("onnxruntime.dll ");
+            if (!oneModelExists) missingFiles.Append("oneocr.onemodel");
+            
+            modelStatusLabel.Text = missingFiles.ToString();
+            modelStatusLabel.ForeColor = Color.Red;
+
+            // 记录到日志
+            logger.ZLogWarning($"{missingFiles.ToString()}");
+            
+            // 可选：显示警告对话框
+            MessageBox.Show(
+                $"{missingFiles}\n\n程序可能无法正常工作。请确保所有必要文件都在程序目录中。", 
+                "缺少必要文件", 
+                MessageBoxButtons.OK, 
+                MessageBoxIcon.Warning);
+        }
     }
 }
 
