@@ -35,7 +35,7 @@ jobs:
           9.0.x
 
     - name: Build SimpleOneOcr
-      run: dotnet publish SimpleOneOcr/SimpleOneOcr.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -f ${{ github.event.inputs.framework }} -o ./publish
+      run: dotnet publish SimpleOneOcr/SimpleOneOcr.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -f ${{ github.event.inputs.framework }} -o ./publish
 
     - name: Create Release
       id: create_release
