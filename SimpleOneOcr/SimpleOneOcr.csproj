@@ -8,10 +8,8 @@
         <Nullable>enable</Nullable>
         <UseWindowsForms>true</UseWindowsForms>
         <PublishSingleFile>true</PublishSingleFile>
-        <PublishTrimmed>true</PublishTrimmed>
-        <TrimMode>partial</TrimMode>
-        <DebugType>none</DebugType>
-        <DebugSymbols>false</DebugSymbols>
+        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+        <SelfContained>true</SelfContained>
     </PropertyGroup>
 
     <ItemGroup>
