@@ -760,7 +760,7 @@ public class OcrForm : Form
     private void InitializeComponents()
     {
         // Form settings
-        this.Text = "微软AI OCR by xxssxx";
+        this.Text = "52OCR AI版 by xxssxx";
         this.Size = new Size(900, 700);
         this.MinimumSize = new Size(800, 600);
         this.StartPosition = FormStartPosition.CenterScreen;
